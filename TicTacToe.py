@@ -19,6 +19,7 @@ class TTT_Board:
 
 		self.pos_available=['1','2','3','4','5','6','7','8','9']
 		self.turn_number=0
+		self.board_state=("Empty Board", "No ongoing game")
 
 	def __print_board(self):
 		for i in self.board:
@@ -97,7 +98,7 @@ class TTT_Board:
 
 		return ("Game Undecided", "Continue to next step")
 
-	def __execute_turn(self, gamemode="interactive"):
+	def __execute_turn(self, gamemode="interactive", move=None):
 		if(gamemode=="interactive"):
 			if(self.turn_number%2==1): #First player's turn
 				print("Player 1 enter your choice of position to place a 0:", end=" ")
@@ -136,7 +137,15 @@ class TTT_Board:
 
 			return ("Game Undecided", "Moving onto next turn.")
 		elif(gamemode=="non-interactive"):
-			pass 
+			if(self.turn_number%2==1): #First player's turn				
+				self.board[self.pos_to_idx[move]]="0"
+				self.pos_available.remove(move)
+				
+			else: #Second Player's turn
+				self.board[self.pos_to_idx[move]]="X"
+				self.pos_available.remove(move)
+
+			return ("Turn executed sucessfully", "Nothing to Say")
 
 	def play_game(self, gamemode="interactive", gamefile=None):
 		if(gamemode=="interactive"):
@@ -144,6 +153,7 @@ class TTT_Board:
 			print("|1|2|3|\n|4|5|6|\n|7|8|9|\n")
 			
 			self.__initialise_board()
+			self.board_state=("Game Undecided", "Ongoing Game")
 			
 			for self.turn_number in range(1,10,1):
 				self.board_state=self.__execute_turn(gamemode)
@@ -165,4 +175,47 @@ class TTT_Board:
 			Each row of the input file must contain 9 values from 1 to 9, each 
 			separated by a comma and the last one followed by an endline. In any 
 			row, any integer value should appear only once. 
-			''' 
+			'''
+
+			try:
+				moves_file=open(gamefile, mode="r", encoding="utf-8")
+				result_file=open("results.txt", mode="w", encoding="utf-8")
+			except BaseException as exp:
+				print("Exception occurred while opening the file")
+				raise exp
+			else:
+				'''
+				Here we will read the file and store all the game choices and validate
+				them before proceeding with them.
+				'''
+
+				for line in moves_file.readlines():
+					turns=(line.rstrip("\n")).split(sep=",")
+
+					#Now we validate the input
+					if(sorted(turns)==['1','2','3','4','5','6','7','8','9']):
+						#Now we can execute turns
+						self.__initialise_board()
+						self.board_state=("Game Undecided", "Ongoing Game")
+
+						for self.turn_number in range(1,10,1):
+							self.__execute_turn(gamemode, turns[self.turn_number-1])
+							
+							if(self.turn_number > 4):
+								self.board_state= self.__check_for_result()
+								if(self.board_state[0]=="Game Decided"):
+									result_file.write(str(turns)+"-->"+str(self.board_state)+"\n")
+									break
+								elif(self.turn_number==9):
+									self.board_state=("Game Decided","Game Ended in a DRAW")
+									result_file.write(str(turns)+"-->"+str(self.board_state)+"\n")
+								else:
+									continue
+					else:
+						#The file has invalid content
+						self.__initialise_board()
+						result_file.write(str(turns)+"-->"+"(GAME ABORTED: The corresponding line in moves.txt file has invalid content.)\n")
+						return ("Error Occurred", "GAMES ABORTED: The moves.txt file has invalid content.")
+
+				return("Games Finished", "All the games have been played and the results have been written in results.txt file.")
+					
