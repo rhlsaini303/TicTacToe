@@ -61,7 +61,7 @@ three_crosses=['X','X','X']
 three_zeroes=['0','0','0']
 
 
-def diagnol_match():
+def diagonal_match():
 	principal_diagonal=[Board[pos_to_idx['1']], Board[pos_to_idx['5']], Board[pos_to_idx['9']]]
 	if(principal_diagonal==three_crosses):
 		return ("Match Found", "Player 2 won the Match")
@@ -120,7 +120,7 @@ def vertical_match():
 	return ("Match Not Found", "Continue")
 
 def check_board_for_result():
-	diagonal_result=diagnol_match()
+	diagonal_result=diagonal_match()
 	if(diagonal_result[0]=="Match Found"):
 		return ("Game Decided", diagonal_result[1])
 
